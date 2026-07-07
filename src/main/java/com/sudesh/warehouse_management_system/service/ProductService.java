@@ -3,6 +3,7 @@ package com.sudesh.warehouse_management_system.service;
 import com.sudesh.warehouse_management_system.dto.ProductRequestDTO;
 import com.sudesh.warehouse_management_system.dto.ProductResponseDTO;
 import com.sudesh.warehouse_management_system.entity.Product;
+import com.sudesh.warehouse_management_system.exception.DuplicateResourceException;
 import com.sudesh.warehouse_management_system.exception.ResourceNotFoundException;
 import com.sudesh.warehouse_management_system.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +19,7 @@ public class ProductService {
 
     public ProductResponseDTO createProduct(ProductRequestDTO request) {
         if (productRepository.existsBySku(request.getSku())) {
-            throw new IllegalArgumentException("Product with SKU '" + request.getSku() + "' already exists");
+            throw new DuplicateResourceException("Product with SKU '" + request.getSku() + "' already exists");
         }
 
         Product product = Product.builder()
