@@ -11,6 +11,9 @@ import com.sudesh.warehouse_management_system.repository.WarehouseRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.sudesh.warehouse_management_system.pricing.PricingContext;
+import com.sudesh.warehouse_management_system.pricing.PricingResult;
+import com.sudesh.warehouse_management_system.pricing.PricingStrategy;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -24,6 +27,7 @@ public class OrderService {
     private final ProductRepository productRepository;
     private final WarehouseRepository warehouseRepository;
     private final InventoryService inventoryService;
+    private final PricingStrategy pricingStrategy;
 
     /**
      * Places a new order in PENDING status. No stock is deducted yet —
@@ -51,8 +55,12 @@ public class OrderService {
                     .orElseThrow(() -> new ResourceNotFoundException(
                             "Warehouse not found with id: " + lineRequest.getWarehouseId()));
 
-            BigDecimal lineTotal = product.getUnitPrice()
-                    .multiply(BigDecimal.valueOf(lineRequest.getQuantity()));
+            PricingContext pricingContext = PricingContext.builder()
+                    .unitPrice(product.getUnitPrice())
+                    .quantity(lineRequest.getQuantity())
+                    .build();
+
+            PricingResult pricingResult = pricingStrategy.calculatePrice(pricingContext);
 
             OrderLineItem lineItem = OrderLineItem.builder()
                     .order(order)
@@ -60,11 +68,11 @@ public class OrderService {
                     .warehouse(warehouse)
                     .quantity(lineRequest.getQuantity())
                     .unitPriceAtOrderTime(product.getUnitPrice())
-                    .lineTotal(lineTotal)
+                    .lineTotal(pricingResult.getFinalTotal())
                     .build();
 
             order.getLineItems().add(lineItem);
-            orderTotal = orderTotal.add(lineTotal);
+            orderTotal = orderTotal.add(pricingResult.getFinalTotal());
         }
 
         order.setTotalAmount(orderTotal);

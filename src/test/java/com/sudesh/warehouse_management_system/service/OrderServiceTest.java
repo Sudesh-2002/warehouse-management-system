@@ -34,6 +34,8 @@ class OrderServiceTest {
     private com.sudesh.warehouse_management_system.repository.WarehouseRepository warehouseRepository;
     @Mock
     private InventoryService inventoryService;
+    @Mock
+    private com.sudesh.warehouse_management_system.pricing.PricingStrategy pricingStrategy;
 
     @InjectMocks
     private OrderService orderService;
